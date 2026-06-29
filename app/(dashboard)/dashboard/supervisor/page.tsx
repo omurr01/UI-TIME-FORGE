@@ -8,6 +8,7 @@ import { QuickActions } from '@/features/dashboard/components/quick-actions';
 import { WeeklyHoursChart } from '@/features/dashboard/components/weekly-hours-chart';
 import { TeamStatus } from '@/features/dashboard/components/team-status';
 import { getSupervisorDashboard } from '@/features/dashboard/lib/mock-dashboard';
+import { RoleSync } from '@/features/dashboard/components/role-sync';
 import type { DashboardData } from '@/features/dashboard/types';
 
 export default function SupervisorDashboardPage() {
@@ -23,6 +24,7 @@ export default function SupervisorDashboardPage() {
 
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
+      <RoleSync role="supervisor" />
       <WelcomeBanner name="Morgan Chen" role="supervisor" />
 
       {/* Stats */}

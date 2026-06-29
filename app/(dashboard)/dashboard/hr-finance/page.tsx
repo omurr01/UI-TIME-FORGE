@@ -7,6 +7,7 @@ import { ActivityFeed } from '@/features/dashboard/components/activity-feed';
 import { QuickActions } from '@/features/dashboard/components/quick-actions';
 import { WeeklyHoursChart } from '@/features/dashboard/components/weekly-hours-chart';
 import { getHrFinanceDashboard } from '@/features/dashboard/lib/mock-dashboard';
+import { RoleSync } from '@/features/dashboard/components/role-sync';
 import type { DashboardData } from '@/features/dashboard/types';
 
 export default function HrFinanceDashboardPage() {
@@ -22,6 +23,7 @@ export default function HrFinanceDashboardPage() {
 
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
+      <RoleSync role="hr_finance" />
       <WelcomeBanner name="Jordan Martinez" role="hr_finance" />
 
       {/* Stats */}
