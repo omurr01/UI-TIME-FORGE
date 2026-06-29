@@ -83,8 +83,14 @@ const MOCK_USERS: Record<UserRole, MockUser> = {
 
 const ShellContext = createContext<ShellContextValue | null>(null);
 
-export function ShellProvider({ children }: { children: React.ReactNode }) {
-  const [currentRole, setCurrentRole] = useState<UserRole>('employee');
+export function ShellProvider({
+  children,
+  initialRole = 'employee',
+}: {
+  children: React.ReactNode;
+  initialRole?: UserRole;
+}) {
+  const [currentRole, setCurrentRole] = useState<UserRole>(initialRole);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
