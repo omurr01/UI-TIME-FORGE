@@ -2,227 +2,222 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  LayoutDashboard,
-  Clock,
-  FileText,
-  MessageSquare,
-  BarChart2,
-  TrendingUp,
-  Bell,
-  DollarSign,
-  Users,
-  Settings,
-  ChevronLeft,
-  ChevronRight,
-  LogOut,
-} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AuthLogo } from '@/features/auth/components/auth-logo';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
-import type { UserRole } from '@/features/dashboard/types';
+import { getNavGroups } from '@/lib/nav-config';
+import { useShell } from '@/contexts/shell-context';
 
-interface NavItem {
+// ─── Sidebar Item ─────────────────────────────────────────────────────────────
+
+interface SidebarItemProps {
   label: string;
   href: string;
   icon: React.ElementType;
   badge?: number;
-  roles: UserRole[];
-}
-
-const NAV_ITEMS: NavItem[] = [
-  {
-    label: 'Dashboard',
-    href: '/dashboard',
-    icon: LayoutDashboard,
-    roles: ['employee', 'supervisor', 'hr_finance', 'admin'],
-  },
-  {
-    label: 'Employees',
-    href: '/employees',
-    icon: Users,
-    roles: ['supervisor', 'hr_finance', 'admin'],
-  },
-  {
-    label: 'Time Tracking',
-    href: '/time-tracking',
-    icon: Clock,
-    roles: ['employee', 'supervisor', 'hr_finance', 'admin'],
-  },
-  {
-    label: 'Timesheets',
-    href: '/timesheets',
-    icon: FileText,
-    badge: 3,
-    roles: ['employee', 'supervisor', 'hr_finance', 'admin'],
-  },
-  {
-    label: 'Daily Scrum',
-    href: '/scrum',
-    icon: MessageSquare,
-    roles: ['employee', 'supervisor', 'admin'],
-  },
-  {
-    label: 'KPI',
-    href: '/kpi',
-    icon: TrendingUp,
-    roles: ['employee', 'supervisor', 'hr_finance', 'admin'],
-  },
-  {
-    label: 'Reports',
-    href: '/reports',
-    icon: BarChart2,
-    roles: ['supervisor', 'hr_finance', 'admin'],
-  },
-  {
-    label: 'Notifications',
-    href: '/notifications',
-    icon: Bell,
-    badge: 5,
-    roles: ['employee', 'supervisor', 'hr_finance', 'admin'],
-  },
-  {
-    label: 'Payroll',
-    href: '/payroll',
-    icon: DollarSign,
-    roles: ['hr_finance', 'admin'],
-  },
-  {
-    label: 'Settings',
-    href: '/settings',
-    icon: Settings,
-    roles: ['employee', 'supervisor', 'hr_finance', 'admin'],
-  },
-];
-
-interface SidebarProps {
-  role: UserRole;
+  active: boolean;
   collapsed: boolean;
-  onToggle: () => void;
 }
 
-export function Sidebar({ role, collapsed, onToggle }: SidebarProps) {
-  const pathname = usePathname();
+function SidebarItem({ label, href, icon: Icon, badge, active, collapsed }: SidebarItemProps) {
+  const base = cn(
+    'relative flex items-center rounded-lg transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+    active
+      ? 'bg-primary text-primary-foreground'
+      : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+    collapsed ? 'h-10 w-10 justify-center mx-auto' : 'gap-3 px-3 h-10 w-full'
+  );
 
-  const visibleItems = NAV_ITEMS.filter((item) => item.roles.includes(role));
+  if (collapsed) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Link href={href} className={base} aria-label={label}>
+            <Icon size={18} className="shrink-0" />
+            {badge ? (
+              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
+            ) : null}
+          </Link>
+        </TooltipTrigger>
+        <TooltipContent side="right" className="flex items-center gap-2">
+          {label}
+          {badge ? (
+            <Badge variant="destructive" className="h-4 px-1 text-[10px]">
+              {badge}
+            </Badge>
+          ) : null}
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return (
+    <Link href={href} className={base}>
+      <Icon size={17} className="shrink-0" />
+      <motion.span
+        className="flex-1 text-sm font-medium truncate"
+        initial={false}
+        animate={{ opacity: 1 }}
+      >
+        {label}
+      </motion.span>
+      {badge ? (
+        <Badge
+          variant={active ? 'secondary' : 'destructive'}
+          className="h-5 px-1.5 text-xs ml-auto"
+        >
+          {badge}
+        </Badge>
+      ) : null}
+    </Link>
+  );
+}
+
+// ─── Nav Group ────────────────────────────────────────────────────────────────
+
+interface NavGroupProps {
+  label: string;
+  collapsed: boolean;
+  children: React.ReactNode;
+}
+
+function NavGroup({ label, collapsed, children }: NavGroupProps) {
+  return (
+    <div className="space-y-0.5">
+      <AnimatePresence initial={false}>
+        {!collapsed && (
+          <motion.p
+            key="group-label"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.15 }}
+            className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70 select-none overflow-hidden"
+          >
+            {label}
+          </motion.p>
+        )}
+      </AnimatePresence>
+      <div className={cn('space-y-0.5', collapsed && 'flex flex-col items-center')}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ─── Sidebar ──────────────────────────────────────────────────────────────────
+
+export function Sidebar() {
+  const pathname = usePathname();
+  const { user, sidebarCollapsed: collapsed, toggleSidebar } = useShell();
+
+  const groups = getNavGroups(user.role);
 
   function isActive(href: string) {
-    if (href === '/dashboard') {
-      return pathname.startsWith('/dashboard');
-    }
-    return pathname.startsWith(href);
+    if (href === '/dashboard') return pathname.startsWith('/dashboard');
+    // strip query strings for comparison
+    return pathname.startsWith(href.split('?')[0]);
   }
 
   return (
     <TooltipProvider delayDuration={0}>
-      <aside
-        className={cn(
-          'flex flex-col h-full bg-card border-r border-border transition-all duration-300 ease-in-out',
-          collapsed ? 'w-16' : 'w-60'
-        )}
+      <motion.aside
+        initial={false}
+        animate={{ width: collapsed ? 64 : 240 }}
+        transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+        className="flex flex-col h-full bg-card border-r border-border overflow-hidden shrink-0"
+        aria-label="Main navigation"
       >
         {/* Logo */}
         <div
           className={cn(
-            'flex items-center border-b border-border h-16 shrink-0 px-4',
-            collapsed ? 'justify-center' : 'justify-between'
+            'flex items-center border-b border-border h-16 shrink-0 px-4 overflow-hidden',
+            collapsed ? 'justify-center px-0' : 'justify-between'
           )}
         >
-          {!collapsed && <AuthLogo size="sm" href="/dashboard" />}
-          {collapsed && (
-            <div className="rounded-lg bg-primary text-primary-foreground flex items-center justify-center p-1.5">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+          <AnimatePresence initial={false} mode="wait">
+            {collapsed ? (
+              <motion.div
+                key="logo-icon"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.15 }}
               >
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </svg>
-            </div>
-          )}
+                <div className="rounded-lg bg-primary text-primary-foreground flex items-center justify-center p-1.5">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="logo-full"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+              >
+                <AuthLogo size="sm" href="/dashboard" />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Nav items */}
-        <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-0.5">
-          {visibleItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.href);
-
-            if (collapsed) {
-              return (
-                <Tooltip key={item.href}>
-                  <TooltipTrigger asChild>
-                    <Link
-                      href={item.href}
-                      className={cn(
-                        'flex items-center justify-center w-full h-10 rounded-lg transition-all duration-150 relative',
-                        active
-                          ? 'bg-primary text-primary-foreground'
-                          : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                      )}
-                      aria-label={item.label}
-                    >
-                      <Icon size={18} />
-                      {item.badge && (
-                        <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-destructive" />
-                      )}
-                    </Link>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">
-                    <span>{item.label}</span>
-                    {item.badge && (
-                      <Badge variant="destructive" className="ml-2 text-xs">
-                        {item.badge}
-                      </Badge>
-                    )}
-                  </TooltipContent>
-                </Tooltip>
-              );
-            }
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  'flex items-center gap-3 px-3 h-10 rounded-lg text-sm font-medium transition-all duration-150',
-                  active
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                )}
-              >
-                <Icon size={17} className="shrink-0" />
-                <span className="flex-1 truncate">{item.label}</span>
-                {item.badge && (
-                  <Badge
-                    variant={active ? 'secondary' : 'destructive'}
-                    className="text-xs h-5 px-1.5"
-                  >
-                    {item.badge}
-                  </Badge>
-                )}
-              </Link>
-            );
-          })}
+        {/* Nav groups */}
+        <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-4" role="navigation">
+          {groups.map((group) => (
+            <NavGroup key={group.id} label={group.label} collapsed={collapsed}>
+              {group.items.map((item) => (
+                <SidebarItem
+                  key={item.href}
+                  label={item.label}
+                  href={item.href}
+                  icon={item.icon}
+                  badge={item.badge}
+                  active={isActive(item.href)}
+                  collapsed={collapsed}
+                />
+              ))}
+            </NavGroup>
+          ))}
         </nav>
 
-        {/* Bottom: logout + collapse toggle */}
-        <div className="shrink-0 border-t border-border px-2 py-3 space-y-0.5">
+        {/* Bottom controls */}
+        <div
+          className={cn(
+            'shrink-0 border-t border-border px-2 py-3 space-y-0.5',
+            collapsed && 'flex flex-col items-center'
+          )}
+        >
+          {/* Sign out */}
           {collapsed ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
                   href="/login"
-                  className="flex items-center justify-center w-full h-10 rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground transition-all duration-150"
+                  className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   aria-label="Sign out"
                 >
                   <LogOut size={17} />
@@ -233,28 +228,52 @@ export function Sidebar({ role, collapsed, onToggle }: SidebarProps) {
           ) : (
             <Link
               href="/login"
-              className="flex items-center gap-3 px-3 h-10 rounded-lg text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-all duration-150"
+              className="flex items-center gap-3 px-3 h-10 w-full rounded-lg text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <LogOut size={17} className="shrink-0" />
               <span>Sign out</span>
             </Link>
           )}
 
+          {/* Collapse toggle */}
           <Button
             variant="ghost"
             size="sm"
-            onClick={onToggle}
+            onClick={toggleSidebar}
             className={cn(
-              'w-full text-muted-foreground hover:text-foreground h-8 text-xs',
-              collapsed ? 'px-0 justify-center' : 'justify-between px-3'
+              'text-muted-foreground hover:text-foreground h-8 text-xs',
+              collapsed ? 'w-10 px-0 justify-center' : 'w-full justify-between px-3'
             )}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
-            {!collapsed && <span>Collapse</span>}
-            {collapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
+            <AnimatePresence initial={false} mode="wait">
+              {collapsed ? (
+                <motion.span
+                  key="expand"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.1 }}
+                >
+                  <ChevronRight size={15} />
+                </motion.span>
+              ) : (
+                <motion.span
+                  key="collapse"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.1 }}
+                  className="flex items-center justify-between w-full"
+                >
+                  <span>Collapse</span>
+                  <ChevronLeft size={15} />
+                </motion.span>
+              )}
+            </AnimatePresence>
           </Button>
         </div>
-      </aside>
+      </motion.aside>
     </TooltipProvider>
   );
 }
