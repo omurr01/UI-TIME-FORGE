@@ -199,4 +199,7 @@ export const BREADCRUMB_LABELS: Record<string, string> = {
   'access-denied': 'Access Denied',
   new: 'Add New',
   edit: 'Edit',
+  live: 'Live Timer',
+  'manual-entry': 'Manual Entry',
+  history: 'History',
 };
