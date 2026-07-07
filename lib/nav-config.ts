@@ -197,4 +197,6 @@ export const BREADCRUMB_LABELS: Record<string, string> = {
   settings: 'Settings',
   'not-found': 'Not Found',
   'access-denied': 'Access Denied',
+  new: 'Add New',
+  edit: 'Edit',
 };
