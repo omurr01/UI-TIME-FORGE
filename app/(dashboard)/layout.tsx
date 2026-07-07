@@ -4,6 +4,7 @@ import { ShellProvider, useShell } from '@/contexts/shell-context';
 import { Sidebar } from '@/features/dashboard/components/sidebar';
 import { Topbar } from '@/features/dashboard/components/topbar';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { QueryProvider } from '@/components/providers/query-provider';
 
 // ─── Inner shell (consumes context) ──────────────────────────────────────────
 
@@ -49,8 +50,10 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ShellProvider>
-      <ShellInner>{children}</ShellInner>
-    </ShellProvider>
+    <QueryProvider>
+      <ShellProvider>
+        <ShellInner>{children}</ShellInner>
+      </ShellProvider>
+    </QueryProvider>
   );
 }
